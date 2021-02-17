@@ -1,0 +1,342 @@
+---
+title: "Report Group Project R"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author: "Group2"
+params:
+  n: NA
+  m: NA
+  o: NA
+  p: NA
+  q: NA
+  s: NA
+---
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_chunk$set(fig.align = 'center', echo = TRUE)
+```
+```{r data, include=FALSE}
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(plotly)
+library(knitr)
+
+
+
+db <-get(load("DatamartR.RData"))
+#db <-read_csv("DatamartR.csv")
+
+```
+
+
+
+## Customers Players Report
+
+This report aims to provide insights about the customers in the database of customers of Actual Internet Sports Gambling Activity. 
+The following charts are based on a datamart created with the idea of better understanding customer behavior, so it is contains also relevant features that were obtained by using original variables available for each customers.
+An example of this is the churn risk, a binary feature created to represent whether the customer could no more be loyal with the company. This is used with many others as a filter to obtain personalized graphs. Other filters used are the total amount won and the registration date.
+
+
+## Plots
+
+
+```{r Gender Distribution, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb1 <- db %>%
+  filter(RegistrationDate>=params$m) %>%
+  filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)%>%
+  count(GENDER)
+ggplot(plotdb1) + 
+  geom_col(aes(GENDER,n), fill='blue') + 
+  theme_minimal() + 
+  theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+  labs(title= "Gender Distribution", x="Gender", y= "nr of customers")
+```
+From this graph we can see that the majority of our customers is Male. This gives us the knowledge to think about the exploitation of new games in order to exploit more the female sector.
+```{r Language, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+        plotdb2 <- db %>%
+          filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)%>%
+          count(LANGUAGE, sort=TRUE) %>%
+          top_n(10)
+        ggplot(plotdb2, aes(x=reorder(LANGUAGE,n), y=n)) + 
+          geom_bar(stat='identity', fill='orange') + 
+          coord_flip() +
+          theme_minimal()+ 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="Top 10 Languages", x="Language", y="nr of customers")
+```
+The most spoken language among our customers is German, so we know that for future investments we can focus the design and the development specifically for the central-east Europe market. 
+```{r Age, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+        plotdb3 <- db %>%
+          filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)
+        ggplot(plotdb3, aes(AGE)) + 
+          geom_histogram(fill='seagreen4', bins = 20) + 
+          theme_minimal() + 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="Age Distribution", x="Age", y="nr of customers")
+```
+From this analysis we can see that the most dense age class is the one from 28 to 30 years old, but more in general the most relevant customers are in the range 20 to 40 years. 
+Like this we better know which kind of games to focus on the future.
+```{r Firstgame, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+        plotdb4 <- db %>%
+          filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)%>%
+          count(Firstgame, sort=TRUE)
+        ggplot(plotdb4, aes(Firstgame,n)) + 
+          geom_col(fill='red',  position = "dodge", stat="identity") + 
+          theme_minimal() + 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="First Game Distribution", x="Game Type", y="nr of customers")
+```
+From this chart we can clearly see that people prefer sport games instead of casino ones. 
+```{r FoBets, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb5 <- db %>%
+          filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)
+        ggplot(plotdb5, aes(FOTotalBets,FOTotalWinnings, color= FOstatus)) + 
+          geom_point() + 
+          theme_minimal() + 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="FO Bet vs Win", x="Total Bets", y="Total Win")
+```
+From this chart we can see that betting more in Fixed Odd Games does not mean necessarily to win more, but instead in many cases the contrary works.
+```{r LABets, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb6 <- db %>%
+          filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)
+        ggplot(plotdb6, aes(LATotalBets,LATotalWinnings, color= LAstatus)) + 
+          geom_point() + 
+          theme_minimal() + 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="LA Bet vs Win", x="Total Bets", y="Total Win")
+```
+For what concerns Live Action games, instead, we have some situations of huge win for huge bets, but the center of the distribution is still towards the origin of the axis.
+```{r FORecency, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb7 <- db %>%
+           filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)
+        ggplot(plotdb7, aes(RecencyFO,FOTotalDaysActive, color= FOstatus)) + 
+          geom_point() + 
+          theme_minimal() + 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="FO Recency vs Active Days", x="Recency", y="Active Days")
+```
+Here we can see a negative correlation of the recency against the active days for the fixed odd players. This is linked to the nature of the features involved. However, for higher Recency values we record higher number of profit status of the bet.
+```{r LARecency, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb8 <- db %>%
+           filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)
+        ggplot(plotdb8, aes(RecencyLA,LATotalDaysActive, color= FOstatus)) + 
+          geom_point() + 
+          theme_minimal() + 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="LA Recency vs Active Days", x="Recency", y="Active Days")
+```
+This rational behind the position of the points is similar to the previous graph, but in this case for Live Action games we notice that the dispersion is higher than for the Fixed Odd games.
+```{r Application, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb7 <- db %>%
+          filter(RegistrationDate>=params$m) %>%
+          filter(CHURN_risk==params$n) %>%
+          filter(Firstgame==params$q)%>%
+          filter(sum_stakes<=params$p)%>%
+          filter(sum_win<=params$o)%>%
+          count(Application, sort = TRUE)%>%
+          top_n(10)
+        ggplot(plotdb7, aes(x=reorder(Application,n), y=n)) + 
+          geom_bar(stat='identity', fill='red') + 
+          coord_flip() +
+          theme_minimal()+ 
+          theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+          labs(title="Top 10 Applications", x="Applications", y="nr of customers")
+```
+From the TOP 10 Applications we see that BETANDWIN.DE is the most chosen application by users and this makes sense with the information that we extracted when analysing languages. In fact, a german website would be preferred by german speakers, which in our case are the most present in the customer base.
+```{r Profitable_country, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+plotdb8 <- db %>%
+  filter(RegistrationDate>=params$m) %>%
+  filter(CHURN_risk==params$n) %>%
+  filter(Firstgame==params$q)%>%
+  filter(sum_stakes<=params$p)%>%
+  filter(sum_win<=params$o)%>%
+  group_by(COUNTRY)%>%
+  summarise(totalwin = sum(Sports_bookFO_Win, Sports_bookLA_Win, Casino_Chartwell_Win,
+                           Games_VS_Win,Games_bwin_Win, Casino_BossMedia_Win, Supertoto_Win, na.rm=TRUE), 
+            totalstakes = sum(Sports_bookFO_Stakes, Sports_bookLA_Stakes, Casino_Chartwell_Stakes, 
+                              Games_VS_Stakes,Games_bwin_Stakes, Casino_BossMedia_Stakes, Supertoto_Stakes, na.rm=TRUE),
+            totalpokersell = sum(pokerchip_SELL, na.rm=TRUE),
+            totalpokerbuy = sum(pokerchip_BUY, na.rm = TRUE),
+            totalprofit = totalstakes - totalwin,
+            totalpokerpro = totalpokersell - totalpokerbuy)%>%
+  arrange(desc(totalprofit))%>%
+  select(c("COUNTRY","totalprofit", "totalpokerpro"))%>%
+  top_n(10)%>%
+  pivot_longer(cols = -COUNTRY, names_to = "Profits", values_to = "Values")
+ggplot(plotdb8, aes(x=reorder(Profits,Values), y=Values/1000000, fill = COUNTRY)) + 
+  geom_bar(position= position_dodge(), stat='identity') + 
+  theme_minimal()+ 
+  theme(text = element_text(size=8), axis.text.x = element_text(hjust=1)) + 
+  labs(title="Top 10 Profitable Country", x="Types", y="Profits in Millions Euros")
+
+```
+From our analysis we see that most of our customers come from Austria and Germany, which makes sense with our previous findings about german speakers and german websites preferred. 
+```{r Profit_per_games, echo=FALSE, error = FALSE, warning=FALSE,message=FALSE}
+plotdb9 <- db %>%
+  filter(RegistrationDate>=params$m) %>%
+  filter(CHURN_risk==params$n) %>%
+  filter(Firstgame==params$q)%>%
+  filter(sum_stakes<=params$p)%>%
+  filter(sum_win<=params$o)%>%
+  summarise(Sports_bookFO = sum(Sports_bookFO_Stakes, na.rm=TRUE)-sum(Sports_bookFO_Win, na.rm=TRUE), 
+            Sports_bookLA = sum(Sports_bookLA_Stakes, na.rm=TRUE)-sum(Sports_bookLA_Win, na.rm=TRUE), 
+            Casino_Chartwell = sum(Casino_Chartwell_Stakes, na.rm=TRUE) - sum(Casino_Chartwell_Win, na.rm=TRUE),
+            Games_VS = sum(Games_VS_Stakes, na.rm=TRUE)-sum(Games_VS_Win, na.rm=TRUE), 
+            Gamebwin = sum(Games_bwin_Stakes, na.rm=TRUE)-sum(Games_bwin_Win, na.rm=TRUE), 
+            Casino = sum(Casino_BossMedia_Stakes, na.rm=TRUE)-sum(Casino_BossMedia_Win, na.rm=TRUE), 
+            Supertoto =sum(Supertoto_Stakes, na.rm=TRUE)-sum(Supertoto_Win, na.rm=TRUE),
+            PokerChips = sum(pokerchip_SELL, na.rm = TRUE)-sum(pokerchip_BUY, na.rm = TRUE) )%>%
+  pivot_longer (everything() ,names_to = "Games",values_to = "Sum_Profits")%>%
+  arrange(desc(Sum_Profits))
+
+ggplot(plotdb9, aes(x=reorder(Games,Sum_Profits), y=Sum_Profits/1000000)) + 
+  geom_bar(stat='identity', fill = "brown") + 
+  theme_minimal()+ 
+  theme(text = element_text(size=8), axis.text.x = element_text(angle = 90, hjust=1)) + 
+  labs(title="Total Profits Per Games", x="Types", y="Total Amount in Millions Euros")
+
+```
+Here we see that the most profitable games are the Casino Chartwell one and the Sports for Fixed Odds.
+```{r profites_per_bets_games, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+
+plotdb10 <- db %>%
+  filter(RegistrationDate>=params$m) %>%
+  filter(CHURN_risk==params$n) %>%
+  filter(Firstgame==params$q)%>%
+  filter(sum_stakes<=params$p)%>%
+  filter(sum_win<=params$o)%>%
+  summarise(Sports_bookFO = (sum(Sports_bookFO_Stakes, na.rm=TRUE)-sum(Sports_bookFO_Win, na.rm=TRUE))/sum(Sports_bookFO_Bets, na.rm=TRUE), 
+            Sports_bookLA = (sum(Sports_bookLA_Stakes, na.rm=TRUE)-sum(Sports_bookLA_Win, na.rm=TRUE))/sum(Sports_bookLA_Bets, na.rm=TRUE), 
+            Casino_Chartwell = (sum(Casino_Chartwell_Stakes, na.rm=TRUE) - sum(Casino_Chartwell_Win, na.rm=TRUE))/sum(Casino_Chartwell_Bets, na.rm=TRUE),
+            Games_VS = (sum(Games_VS_Stakes, na.rm=TRUE)-sum(Games_VS_Win, na.rm=TRUE))/sum(Games_VS_Bets, na.rm=TRUE),
+            Gamebwin = (sum(Games_bwin_Stakes, na.rm=TRUE)-sum(Games_bwin_Win, na.rm=TRUE))/sum(Games_bwin_Bets, na.rm=TRUE), 
+            Casino = (sum(Casino_BossMedia_Stakes, na.rm=TRUE)-sum(Casino_BossMedia_Win, na.rm=TRUE))/sum(Casino_BossMedia_Bets, na.rm=TRUE), 
+            supertoto =(sum(Supertoto_Stakes, na.rm=TRUE)-sum(Supertoto_Win, na.rm=TRUE))/sum(Supertoto_Bets, na.rm=TRUE) )%>%
+  pivot_longer (everything() ,names_to = "Games",values_to = "Profits_Bets")%>%
+  arrange(desc(Profits_Bets))
+
+ggplot(plotdb10, aes(x=reorder(Games,Profits_Bets), y=Profits_Bets)) + 
+  geom_bar(stat='identity', fill = "seagreen4") + 
+  theme_minimal()+ 
+  theme(text = element_text(size=8), axis.text.x = element_text(angle = 90, hjust=1)) + 
+  labs(title="Profits per Bets and Per Games", x="Types", y="Amount in  Euros")
+```
+The same as before still applies when dealing with profits per Bets instead of total.
+
+```{r map, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+
+world_map <- map_data("world", region = unique(db$COUNTRY))
+plotd16 <- db %>%
+  select(COUNTRY, FOProfit_Loss, FOTotalBets)%>%
+  count(COUNTRY)
+plotd17 <- db %>%
+  group_by(COUNTRY)%>%
+  summarise(totalwin = sum(Sports_bookFO_Win, Sports_bookLA_Win, Casino_Chartwell_Win,
+                           Games_VS_Win,Games_bwin_Win, Casino_BossMedia_Win, Supertoto_Win, na.rm=TRUE), 
+            totalstakes = sum(Sports_bookFO_Stakes, Sports_bookLA_Stakes, Casino_Chartwell_Stakes, 
+                              Games_VS_Stakes,Games_bwin_Stakes, Casino_BossMedia_Stakes, Supertoto_Stakes, na.rm=TRUE),
+            totalpokersell = sum(pokerchip_SELL, na.rm=TRUE),
+            totalpokerbuy = sum(pokerchip_BUY, na.rm = TRUE),
+            country_bets = sum(Sports_bookFO_Bets, Sports_bookLA_Bets, Casino_Chartwell_Bets, Games_VS_Bets,
+                               Games_bwin_Bets, Casino_BossMedia_Bets, Supertoto_Bets, na.rm=TRUE ),
+            country_profit = totalstakes - totalwin)
+               
+merge_data1 <- inner_join(plotd17,plotd16, by=c("COUNTRY"))
+merge_data <- inner_join(merge_data1,world_map, by=c("COUNTRY"="region"))%>%
+  group_by(COUNTRY)%>%
+  mutate(mean_long = mean(long), mean_lat = mean(lat))
+        
+my_theme <- function () { 
+  theme_bw() + theme(axis.text = element_blank(),
+                     axis.title = element_blank(),
+                     strip.text = element_blank(),
+                     panel.grid.major = element_blank(), 
+                     panel.grid.minor = element_blank(),
+                     panel.background = element_blank(), 
+                     legend.position = "right",
+                             panel.border = element_blank(), 
+                             strip.background = element_rect(fill = 'white', colour = 'white'))
+}
+
+ggplot() +
+  geom_polygon(data = merge_data, aes(x=long, y=lat, group=group, fill = n),
+               color="white", size=0.01 )+
+  scale_fill_continuous(name="Number customers", 
+                        low = "lightblue", high = "darkblue",limits = c(0,2500), 
+                        breaks=c(200,400,600,800,1000,1200,1400, 1600, 1800, 2000), na.value = "grey50")+ 
+  geom_point(data=merge_data, aes(x=mean_long, y=mean_lat, size = country_profit/1000), color = "red",  alpha = .5) + 
+  scale_size(name="Profit/Loss", range=c(0,5))+
+  my_theme()
+
+
+
+```
+Here we can see that the most traffic in terms of profits and losses comes from the center of Europe for Germany and Austria.
+Most customers come from Europe in general.
+```{r tables, echo=FALSE, error = FALSE, warning=FALSE, message=FALSE}
+datatable <-  db %>% 
+  filter(COUNTRY == params$s) %>%
+  group_by(UserID)%>%
+  summarise(Sports_bookFO_Profits = sum(Sports_bookFO_Stakes, na.rm=TRUE)-sum(Sports_bookFO_Win, na.rm=TRUE),
+            Sports_bookLA_Profits = sum(Sports_bookLA_Stakes, na.rm=TRUE)-sum(Sports_bookLA_Win, na.rm=TRUE),
+            Casino_Chartwell_Profits = sum(Casino_Chartwell_Stakes, na.rm=TRUE) - sum(Casino_Chartwell_Win, na.rm=TRUE),
+            Games_VS_Profits = sum(Games_VS_Stakes, na.rm=TRUE)-sum(Games_VS_Win, na.rm=TRUE), 
+            Gamebwin_Profits = sum(Games_bwin_Stakes, na.rm=TRUE)-sum(Games_bwin_Win, na.rm=TRUE), 
+            Casino_Profits = sum(Casino_BossMedia_Stakes, na.rm=TRUE)-sum(Casino_BossMedia_Win, na.rm=TRUE),
+            Supertoto_Profits =sum(Supertoto_Stakes, na.rm=TRUE)-sum(Supertoto_Win, na.rm=TRUE),
+            PokerChips = sum(pokerchip_SELL, na.rm = TRUE)-sum(pokerchip_BUY, na.rm = TRUE),
+            Total_Wins = sum(Sports_bookFO_Win,Sports_bookLA_Win,Casino_Chartwell_Win, Games_VS_Win, Games_bwin_Win,
+                             Casino_BossMedia_Win, Supertoto_Win, pokerchip_BUY, na.rm = TRUE),
+            Total_Stakes = sum(Sports_bookFO_Stakes,Sports_bookLA_Stakes,Casino_Chartwell_Stakes, Games_VS_Stakes,
+                               Games_bwin_Stakes, Casino_BossMedia_Stakes, Supertoto_Stakes, pokerchip_SELL, na.rm = TRUE),
+            Sports_bookFO_Bets = sum(Sports_bookFO_Bets, na.rm=TRUE), 
+            Sports_bookLA_Bets = sum(Sports_bookLA_Bets, na.rm=TRUE), 
+            Casino_Chartwell_Bets = sum(Casino_Chartwell_Bets, na.rm=TRUE),
+            Games_VS_Bets = sum(Games_VS_Bets, na.rm=TRUE), Gamebwin_Bets = sum(Games_bwin_Bets, na.rm=TRUE), 
+            Casino_Bets = sum(Casino_BossMedia_Bets, na.rm=TRUE), Supertoto_Bets =sum(Supertoto_Bets, na.rm=TRUE),
+            Total_Profits = sum(Sports_bookFO_Profits, Sports_bookLA_Profits, Casino_Chartwell_Profits, Games_VS_Profits,
+                                Gamebwin_Profits, Casino_Profits, Supertoto_Profits, PokerChips,  na.rm=TRUE ),
+            Total_Bets = sum(Sports_bookFO_Bets, Sports_bookLA_Bets, Casino_Chartwell_Bets, Games_VS_Bets,
+                             Games_bwin_Bets, Casino_BossMedia_Bets, Supertoto_Bets, na.rm=TRUE ),
+            Ratio_Profits_Bets = round(Total_Profits/Total_Bets,2))%>%
+            select(UserID, Total_Wins, Total_Stakes, Total_Bets,  Total_Profits , Ratio_Profits_Bets)%>%
+            arrange(desc(Total_Profits)) %>%
+            top_n(10)
+knitr::kable(datatable)
+
+```
+
+
